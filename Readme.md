@@ -6,22 +6,7 @@
 
 **目前只做了最最基本的东西，从服务器拿到的数据不管是什么全部保存。**  
 **没有分类，没有图片下载**  
-**什么时候更新，取决于我什么时候想弄**  
-
-## 依赖项
-```python
-import asyncio
-import json
-from datetime import datetime
-from typing import Dict
-
-import aiohttp
-```
-aiohttp需要单独安装，其他的全是内置的标准库。  
-```shell
-pip install aiohttp
-apt install python3-aiohttp
-```
+**什么时候更新，取决于我什么时候想弄**
 
 ## 注意事项
 获取动态内容的接口URL是`https://api.vc.bilibili.com/dynamic_svr/v1/dynamic_svr/space_history?host_uid={用户UID}`  
@@ -30,27 +15,26 @@ apt install python3-aiohttp
 所以我用的是传递Cookie的方式，适配的Cookie文件格式是Firefox插件Cookie Quick Manager导出的json文件。  
 
 ## 使用方法
-下载仓库中的main.py，用记事本或其他文本编辑软件打开，翻到文件的最上面。  
-```python
-UID = '401746666'
-URL = f'https://api.vc.bilibili.com/dynamic_svr/v1/dynamic_svr/space_history?host_uid={UID}&need_top=1'
-CookieFilePath = ""
-CookieFileName = "cookies.json"
-Headers = {
-    "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:124.0) Gecko/20100101 Firefox/124.0",
-    "Cookie": "",
-    "Referer":f"https://space.bilibili.com/{UID}/dynamic"}
-Continue = True
-Offset = 0
-Count = -1
-SaveFilePath = ""
-SaveFileName = "save"
-ExtensionFilename = ".json"
-TimeNow = datetime.now().strftime("%Y-%m-%d %H-%M-%S")
-SaveFileFullName = f"{SaveFilePath}{SaveFileName} - {TimeNow}{ExtensionFilename}"
-RequestRate = 1
+克隆本仓库  
+```shell
+git clone https://github.com/TheWhiteDog9487/bilibili-user-dynamic-download-script
 ```
-这一堆配置项，需要修改的只有第一个。  
-把UID后面的数字换成你要下载的用户的UID。  
-然后直接运行脚本。  
-记得把你导出的Cookie放在脚本旁边。
+本项目使用uv管理Python环境，请确保你的设备上已经安装，具体请参考[uv的官方文档](https://docs.astral.sh/uv/getting-started/installation/)  
+然后，在仓库文件夹下打开终端.
+```shell
+# 安装项目依赖项
+uv sync
+
+# 运行程序
+uv run main.py --uid <你的用户UID>
+
+# 例子：
+uv run main.py --uid 1709916540
+```
+记得把你导出的Cookie放在脚本旁边。  
+程序会在抓取完成之后自动退出，运行输出在output文件夹里。  
+
+如果觉得运行太慢，并且不想要动态底下评论区的数据，那你可以让程序不要抓取评论区，这会让程序完成所需时间极为显著地减少。  
+```shell
+uv run main.py --uid <你的用户UID> --no_comment
+```
