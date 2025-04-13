@@ -1,5 +1,6 @@
 import asyncio
 import json
+import sys
 from collections.abc import Callable
 from datetime import datetime
 from os import makedirs
@@ -10,7 +11,7 @@ import aiohttp
 from wbi import get_wbi_params
 
 UID = '401746666'
-Dynamic_URL = f'https://api.vc.bilibili.com/dynamic_svr/v1/dynamic_svr/space_history?host_uid={UID}&need_top=1'
+Dynamic_URL = 'https://api.vc.bilibili.com/dynamic_svr/v1/dynamic_svr/space_history?'
 Comment_URL = "https://api.bilibili.com/x/v2/reply/wbi/main?"
 CookieFilePath = ""
 CookieFileName = "cookies.json"
@@ -22,6 +23,7 @@ Offset = 0
 Count = -1
 TimeNow = datetime.now().strftime("%Y-%m-%d %H-%M-%S")
 RequestRate = 0
+No_Comment = False
 Universal_SaveFilePath = f"output/{TimeNow}/"
 Dynamic_SaveFileName = "dynamic"
 Universal_ExtensionFilename = ".json"
@@ -30,9 +32,59 @@ Comment_SaveFileName = "comment"
 Comment_SaveFileFullName = f"{Universal_SaveFilePath}{Comment_SaveFileName}{Universal_ExtensionFilename}"
 Dynamic_List = []
 Comment_List = []
+Arguments = sys.argv
+
+
+def ProcessArguments():
+    if len(Arguments) <= 1:
+        return
+    try:
+        i = Arguments.index("--uid")
+        if Arguments[i + 1].isdigit():
+            global UID
+            UID = Arguments[i + 1]
+    except ValueError:
+        pass
+    try:
+        i = Arguments.index("--cookie_path")
+        if Arguments[i + 1]:
+            global CookieFilePath
+            CookieFilePath = Arguments[i + 1]
+    except ValueError:
+        pass
+    try:
+        i = Arguments.index("--cookie_file")
+        if Arguments[i + 1]:
+            global CookieFileName
+            CookieFileName = Arguments[i + 1]
+    except ValueError:
+        pass
+    try:
+        i = Arguments.index("--request_rate")
+        if Arguments[i + 1].isdigit():
+            global RequestRate
+            RequestRate = float(Arguments[i + 1])
+    except ValueError:
+        pass
+    try:
+        if Arguments.index("--remove_ad"):
+            pass
+            # TODO
+    except ValueError:
+        pass
+    try:
+        if Arguments.index("--no_comment"):
+            global No_Comment
+            No_Comment = True
+            global RequestRate
+            RequestRate = 1.5
+    except ValueError:
+        pass
 
 
 async def Get_Comment(Data: Dict):
+    if No_Comment == True:
+        return
     Inner_Comment_List = []
     async with aiohttp.ClientSession(headers=Headers) as session:
         for dynamic in Data["data"]["cards"]:
@@ -94,9 +146,10 @@ def SaveToFile():
         # Json = json.dumps(Data, indent=4, ensure_ascii=True).encode().decode("unicode_escape").encode('utf-8', 'replace').decode('utf-8')
         Json = json.dumps(Dynamic_List, indent=4, ensure_ascii=False)
         f.write(Json)
-    with open(Comment_SaveFileFullName, "a", encoding="utf-16") as f:
-        Json = json.dumps(Comment_List, indent=4, ensure_ascii=False)
-        f.write(Json)
+    if No_Comment == False:
+        with open(Comment_SaveFileFullName, "a", encoding="utf-16") as f:
+            Json = json.dumps(Comment_List, indent=4, ensure_ascii=False)
+            f.write(Json)
 
 
 # @Debug
@@ -110,7 +163,7 @@ async def main():
             if Count == 0:
                 break
             await asyncio.sleep(RequestRate)
-            async with session.get(Dynamic_URL + f"&offset_dynamic_id={Offset}", headers=Headers) as response:
+            async with session.get(Dynamic_URL + f"host_uid={UID}&need_top=1&offset_dynamic_id={Offset}", headers=Headers) as response:
                 if response.status == 412:
                     raise RuntimeError(f"触发风控\n{await response.text()}")
                 Dynamic = await response.json()
@@ -130,5 +183,6 @@ async def main():
                 Dynamic_List.append(Dynamic)
 
 if __name__ == '__main__':
+    ProcessArguments()
     asyncio.run(main())
     SaveToFile()
