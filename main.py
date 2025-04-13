@@ -11,7 +11,7 @@ from wbi import get_wbi_params
 
 UID = '401746666'
 Dynamic_URL = f'https://api.vc.bilibili.com/dynamic_svr/v1/dynamic_svr/space_history?host_uid={UID}&need_top=1'
-Comment_URL = "https://api.bilibili.com/x/v2/reply/wbi/main?https://api.bilibili.com/x/v2/reply/wbi/main?"
+Comment_URL = "https://api.bilibili.com/x/v2/reply/wbi/main?"
 CookieFilePath = ""
 CookieFileName = "cookies.json"
 Headers = {
@@ -32,6 +32,7 @@ Comment_SaveFileFullName = f"{Universal_SaveFilePath}{Comment_SaveFileName}{Univ
 Dynamic_List = []
 Comment_List = []
 
+
 async def Get_Comment(Data: Dict):
     Inner_Comment_List = []
     async with aiohttp.ClientSession(headers=Headers) as session:
@@ -45,7 +46,7 @@ async def Get_Comment(Data: Dict):
             wbi_params = get_wbi_params({
                 "oid" : dynamic["desc"]["dynamic_id"],
                 "type" : type})
-            async with session.get(Comment_URL + f"{wbi_params}") as response:
+            async with session.get(Comment_URL + wbi_params) as response:
                 Comment = await response.json()
                 Inner_Comment_List.append({dynamic["desc"]["dynamic_id"]: Comment})
     Comment_List.append(Inner_Comment_List)
