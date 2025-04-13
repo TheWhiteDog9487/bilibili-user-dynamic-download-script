@@ -76,7 +76,6 @@ def ProcessArguments():
         if Arguments.index("--no_comment"):
             global No_Comment
             No_Comment = True
-            global RequestRate
             RequestRate = 1.5
     except ValueError:
         pass
