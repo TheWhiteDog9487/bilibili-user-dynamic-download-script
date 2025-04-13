@@ -16,7 +16,6 @@ CookieFilePath = ""
 CookieFileName = "cookies.json"
 Headers = {
     "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:138.0) Gecko/20100101 Firefox/138.0",
-    "Referer":f"https://space.bilibili.com/{UID}/dynamic",
     "Cookie": "",}
 Continue = True
 Offset = 0
@@ -40,15 +39,30 @@ async def Get_Comment(Data: Dict):
             type: int = 0
             match dynamic["desc"]["type"]:
                 case 4:
+                    # 纯文字动态 投票
                     type = 17
                 case 2:
+                    # 带图动态
                     type = 11
+                case 1:
+                    # 转发动态 转发直播间
+                    type = 17
+                case 8:
+                    # 投稿视频
+                    type = 1
+                case 64:
+                    # 专栏
+                    type = 12
             wbi_params = get_wbi_params({
-                "oid" : dynamic["desc"]["dynamic_id"],
+                "oid" : dynamic["desc"]["rid"],
                 "type" : type})
+            # 是rid不是dynamic_id
+            # dynamic_id会有其中一部分评论区抓过来是404啥都木有
+            # 别问我为什么rid就行，我也不知道，Copilot自动补全跟我说用这个的
             async with session.get(Comment_URL + wbi_params) as response:
                 Comment = await response.json()
-                Inner_Comment_List.append({dynamic["desc"]["dynamic_id"]: Comment})
+                # 这返回的数据里怎么还有广告啊？
+                Inner_Comment_List.append({dynamic["desc"]["rid"]: Comment})
     Comment_List.append(Inner_Comment_List)
     print(Inner_Comment_List)
 
